@@ -29,6 +29,7 @@ const Profile = () => {
   const { currentUser: user } = useSelector((state) => state.user);
   const navigate = useNavigate();
   const [images, setImages] = useState("");
+  
   const dispatch = useDispatch();
   useEffect(() => {
     setLoading(true);

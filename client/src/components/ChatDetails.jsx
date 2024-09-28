@@ -76,10 +76,10 @@ const ChatDetails = ({ chatId }) => {
       isGroup,
       chatIdGroup: chat?._id,
     });
-    if (res?.success) {
-      setSelectedContacts([]);
-      setLoading(false);
-    }
+    console.log(res);
+    toast.success("Đã thêm người dùng thành công");
+    setSelectedContacts([]);
+    setLoading(false);
   };
   const outGroupChat = async () => {
     setLoading(true);
