@@ -75,3 +75,28 @@ export const apiUpdatedUser = (userId, data) =>
       reject(error);
     }
   });
+export const apiDeleteUser = (userId) =>
+  new Promise(async (resolve, reject) => {
+    try {
+      const response = await axiosConfig({
+        method: "DELETE",
+        url: `/users/delete/${userId}`,
+      });
+      resolve(response);
+    } catch (error) {
+      reject(error);
+    }
+  });
+export const apiUpdatedUserByInfo = (userId, data) =>
+  new Promise(async (resolve, reject) => {
+    try {
+      const response = await axiosConfig({
+        method: "PUT",
+        url: `/users/${userId}/updateByinfo/`,
+        data,
+      });
+      resolve(response);
+    } catch (error) {
+      reject(error);
+    }
+  });

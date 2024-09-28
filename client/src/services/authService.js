@@ -26,12 +26,12 @@ export const apiLoginSuccess = (data) =>
       reject(error);
     }
   });
-export const apichangePassword = (id, data) =>
+export const apichangePassword = (userId, data) =>
   new Promise(async (resolve, reject) => {
     try {
       const response = await axiosConfig({
         method: "PUT",
-        url: "/auth/changePassword/" + id,
+        url: "/auth/changePassword/" + userId,
         data,
       });
       resolve(response);

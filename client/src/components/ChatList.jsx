@@ -14,13 +14,13 @@ const ChatList = ({ currentChatId }) => {
   const { currentUser } = useSelector((state) => state.user);
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  useEffect(() => {
-    setLoading(true);
-    setTimeout(() => {
-      dispatch(getCurrent());
-      setLoading(false);
-    }, 1000);
-  }, []);
+  // useEffect(() => {
+  //   setLoading(true);
+  //   setTimeout(() => {
+  //     dispatch(getCurrent());
+  //     setLoading(false);
+  //   }, 1000);
+  // }, []);
   const getChats = async () => {
     try {
       const res =

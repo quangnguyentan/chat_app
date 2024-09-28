@@ -1,63 +1,25 @@
 import { useState } from "react";
 
-import UploadWidget from "./UploadWidget";
-
 function CldUploadButton() {
-  const [url, updateUrl] = useState();
-  const [error, updateError] = useState();
-
-  /**
-   * handleOnUpload
-   */
-
-  function handleOnUpload(error, result, widget) {
-    if (error) {
-      updateError(error);
-      widget.close({
-        quiet: true,
-      });
-      return;
-    }
-    updateUrl(result?.info?.secure_url);
-  }
-
+  const [images, setImages] = useState("");
+  const submitImage = () => {
+    const data = new FormData();
+    data.append("file", images);
+    data.append("upload_preset", "i96i6rvi");
+    data.append("cloud_name", "dlwx7hywr");
+    fetch("https://api.cloudinary.com/v1_1/dlwx7hywr/image/upload", {
+      method: "POST",
+      body: data,
+    })
+      .then((res) => res.json())
+      .then((data) => console.log(data))
+      .catch((err) => console.log(err));
+  };
   return (
     <main className="main">
-      <div className="container">
-        <h1 className="title">React &amp; Cloudinary Upload Widget</h1>
-      </div>
-
-      <div className="container">
-        <h2>Unsigned with Upload Preset</h2>
-        <UploadWidget onUpload={handleOnUpload}>
-          {({ open }) => {
-            function handleOnClick(e) {
-              e.preventDefault();
-              open();
-            }
-            return <button onClick={handleOnClick}>Upload an Image</button>;
-          }}
-        </UploadWidget>
-
-        {error && <p>{error}</p>}
-
-        {url && (
-          <>
-            <p>
-              <img src={url} alt="Uploaded resource" />
-            </p>
-            <p>{url}</p>
-          </>
-        )}
-      </div>
-
-      <div className="container">
-        <h2>Resources</h2>
-        <p>
-          <a href="https://github.com/colbyfayock/cloudinary-examples/tree/main/examples/react-upload-widget-preset">
-            See the code on github.com.
-          </a>
-        </p>
+      <div>
+        <input type="file" onChange={(e) => setImages(e.target.files[0])} />
+        <button onClick={submitImage}>Upload</button>
       </div>
     </main>
   );

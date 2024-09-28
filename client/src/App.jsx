@@ -31,27 +31,6 @@ function App() {
         dispatch(getCurrent());
         setLoading(false);
       }, 1000);
-      if (
-        location.pathname === "/" &&
-        currentUser &&
-        currentUser?.role === "admin"
-      ) {
-        navigate("/dashboard");
-      }
-      if (
-        location.pathname === "/" &&
-        currentUser &&
-        currentUser?.role === "user"
-      ) {
-        navigate("/chats");
-      }
-      if (
-        location.pathname === "/" &&
-        currentUser &&
-        currentUser?.role === "employee"
-      ) {
-        navigate("/chats");
-      }
     } else {
       navigate("/sign-in");
     }
@@ -67,6 +46,7 @@ function App() {
             {currentUser && currentUser?.role === "admin" ? (
               <Route element={<Public />} path={path.PUBLIC}>
                 <Route element={<Home />} path={path.DASHBOARD} />
+                <Route element={<Profile />} path={path.PROFILE} />
               </Route>
             ) : (
               <Route element={<Public />} path={path.PUBLIC}>

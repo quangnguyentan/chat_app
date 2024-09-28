@@ -1,8 +1,8 @@
 import { Customer } from "@/components/Dashboard/Customer";
+import { Dashboard } from "@/components/Dashboard/Dashboard";
 import { Group } from "@/components/Dashboard/Group";
 import { User } from "@/components/Dashboard/User";
 import { Sidebar } from "@/components/Sidebar/Sidebar";
-import { Dashboard } from "@mui/icons-material";
 import { useEffect, useState } from "react";
 
 export default function Home() {

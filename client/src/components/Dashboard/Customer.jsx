@@ -18,8 +18,14 @@ import {
 } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import Loader from "../Loader";
-import { apiGetAllUser, apiGetSearchContact } from "@/services/userService";
+import {
+  apiDeleteUser,
+  apiGetAllUser,
+  apiGetSearchContact,
+  apiUpdatedUserByInfo,
+} from "@/services/userService";
 import { useSelector } from "react-redux";
+import { apiRegister } from "@/services/authService";
 const style = {
   position: "absolute",
   top: "50%",
@@ -42,7 +48,7 @@ export const Customer = () => {
   const [openPut, setOpenPut] = useState(false);
   let handleClosePut = () => setOpenPut(false);
   const { currentUser } = useSelector((state) => state.user);
-
+  const [value, setValue] = useState("");
   const {
     register,
     handleSubmit,
@@ -73,44 +79,26 @@ export const Customer = () => {
   };
   const onSubmit = async (data) => {
     setLoading(true);
-    const res = await fetch("/api/auth/register", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ ...data, role: true }),
-    });
-
-    if (res.ok) {
+    const res = await apiRegister({ ...data, role: true });
+    if (res.success) {
       setOpen(false);
       reset();
-      router.push("/dashboard");
+      router.push("/");
       toast.success("Tạo nhân viên thành công");
       setLoading(false);
-    }
-
-    if (!res.ok) {
-      const errorMessage = await res.text();
-      toast.error(errorMessage);
     }
   };
   const onEdit = async (userId, data) => {
     setLoading(true);
     console.log(userId);
     console.log(data);
-    const res = await fetch(`/api/users/${userId}/`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(data),
-    });
+    const res = await apiUpdatedUserByInfo(userId, data);
     console.log(res);
-    if (res.ok) {
+    if (res.success) {
       setOpenPut(false);
       setEditEmployye(false);
       reset();
-      router("/dashboard");
+      router("/");
       toast.success("Chỉnh sửa nhân viên thành công");
       setLoading(false);
     }
@@ -121,23 +109,18 @@ export const Customer = () => {
     }
   };
   const onDelete = async (userId) => {
-    setLoading(true);
     console.log(userId);
-    const res = await fetch(`/api/users/${userId}/`, {
-      method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-    if (res.ok) {
-      router.push("/dashboard");
+    setLoading(true);
+    const res = await apiDeleteUser(userId);
+    console.log(res);
+    if (res?.success) {
+      router("/");
       toast.success("Xóa nhân viên thành công");
       setLoading(false);
     }
 
-    if (!res.ok) {
-      const errorMessage = await res.text();
-      toast.error(errorMessage);
+    if (!res?.success) {
+      toast.error("Xóa nhân viên không thành công");
     }
   };
 
@@ -147,8 +130,10 @@ export const Customer = () => {
     }, 500);
     return () => clearTimeout(delayDebounceFn);
   }, [currentUser, search, loading]);
-  const handleClick = (id) => {
+  const handleClick = (id, contact) => {
     setIdEdit(id);
+    setValue(contact);
+
     setOpenPut(true);
   };
   return loading ? (
@@ -175,7 +160,7 @@ export const Customer = () => {
               <>
                 {contact?.code && (
                   <TableRow
-                    onClick={() => handleClick(contact?._id)}
+                    onClick={() => handleClick(contact?._id, contact)}
                     sku={contact?.username}
                     date={contact?.role}
                     price={contact?.code}
@@ -309,7 +294,7 @@ export const Customer = () => {
                             onDelete(idEdit);
 
                             setOpenPut(false);
-                            router.push(`/dashboard`);
+                            router.push(`/`);
                           }}
                         >
                           <DeleteForeverIcon />
@@ -336,7 +321,7 @@ export const Customer = () => {
                             handleSubmit(
                               onEdit(idEdit, {
                                 username: watch("username"),
-                                fullName: watch("fullname"),
+                                code: watch("code"),
                                 password: watch("password"),
                               })
                             )
@@ -345,7 +330,7 @@ export const Customer = () => {
                           <div>
                             <div className="input">
                               <input
-                                defaultValue=""
+                                defaultValue={value?.username}
                                 {...register("username", {
                                   required: "Tên là bắt buộc",
                                   validate: (value) => {
@@ -366,7 +351,18 @@ export const Customer = () => {
                               </p>
                             )}
                           </div>
-
+                          <div>
+                            <div className="input">
+                              <input
+                                defaultValue={value?.code}
+                                {...register("code")}
+                                type="text"
+                                placeholder="Mã giới thiệu"
+                                className="input-field"
+                              />
+                              <CodeIcon sx={{ color: "#737373" }} />
+                            </div>
+                          </div>
                           <div>
                             <div className="input">
                               <input

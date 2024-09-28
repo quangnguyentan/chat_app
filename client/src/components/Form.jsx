@@ -20,7 +20,6 @@ const Form = ({ type }) => {
   const onSubmit = async (data) => {
     if (type === "register") {
       const res = await apiRegister(data);
-      console.log(res);
       if (res?.success) {
         router("/sign-in");
         toast.success("Đăng kí thành công");
@@ -35,12 +34,12 @@ const Form = ({ type }) => {
       if (rs?.success === 0) {
         dispatch(loginSuccessAction(data));
         setTimeout(() => {
-          router("/chats");
+          router("/");
         }, 1000);
       } else {
-        {
+        setTimeout(() => {
           toast.error("Sai tên đăng nhập hoặc mật khẩu");
-        }
+        }, 1000);
       }
     }
   };

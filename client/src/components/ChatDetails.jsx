@@ -1,5 +1,3 @@
-"use client";
-
 import { useState, useEffect, useRef } from "react";
 import Loader from "./Loader";
 import {
@@ -23,7 +21,6 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { apiGetAllUser, apiGetSearchContact } from "@/services/userService";
 import toast from "react-hot-toast";
-import CldUploadButton from "./CldUploadButton";
 import { pusherClient } from "@/lib/pusher";
 import { apiSendMessages } from "@/services/messageService";
 const style = {
@@ -55,6 +52,7 @@ const ChatDetails = ({ chatId }) => {
   const [contacts, setContacts] = useState([]);
   const [membersId, setMembersId] = useState([]);
   const { currentUser } = useSelector((state) => state.user);
+  const [images, setImages] = useState("");
   const isGroup = selectedContacts.length >= 1;
   const router = useNavigate();
   const handleSelect = (contact) => {
@@ -92,7 +90,7 @@ const ChatDetails = ({ chatId }) => {
     });
     console.log(res);
     if (res?.success) {
-      router(`/chats`);
+      router(`/`);
       setLoading(false);
     }
   };
@@ -116,7 +114,7 @@ const ChatDetails = ({ chatId }) => {
     });
     if (res?.success) {
       setLoading(false);
-      router(`/chats`);
+      router(`/`);
     }
   };
   const getContacts = async () => {
@@ -165,8 +163,14 @@ const ChatDetails = ({ chatId }) => {
   };
   useEffect(() => {
     if (currentUser && chatId) getChatDetails(chatId);
-  }, [currentUser, chatId, loading]);
-
+  }, [currentUser, chatId]);
+  const handleChange = async (e) => {
+    console.log(e.target?.files[0]);
+    const file = e.target.files[0];
+    setImages(file);
+    await sendPhoto();
+    // Call sendPhoto right after file selection
+  };
   const sendText = async () => {
     try {
       const res = await apiSendMessages({
@@ -187,16 +191,39 @@ const ChatDetails = ({ chatId }) => {
       sendText();
     }
   };
-  const sendPhoto = async (result) => {
+  const sendPhoto = async () => {
+    if (!images) return;
     try {
-      const res = await apiSendMessages({
+      const data = new FormData();
+      data.append("file", images);
+      data.append("upload_preset", "i96i6rvi");
+      data.append("cloud_name", "dlwx7hywr");
+      console.log(images);
+      const response = await fetch(
+        "https://api.cloudinary.com/v1_1/dlwx7hywr/image/upload",
+        {
+          method: "POST",
+          body: data,
+        }
+      );
+
+      // Kiểm tra nếu phản hồi không thành công
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+
+      // Gọi hàm apiSendMessages với dữ liệu nhận được
+      await apiSendMessages({
         chatId,
         currentUserId: currentUser._id,
-        photo: result?.info?.secure_url,
+        photo: result?.url,
       });
-      console.log(res);
+
+      console.log(result);
     } catch (err) {
-      console.log(err);
+      console.error("Error uploading photo:", err);
     }
   };
 
@@ -405,7 +432,7 @@ const ChatDetails = ({ chatId }) => {
           <div className="flex flex-col justify-center gap-4 py-4">
             {chat?.members && chat?.members[0]?._id === currentUser?._id && (
               <Link
-                to={`/chats/${chatId}/group-info`}
+                to={`/${chatId}/group-info`}
                 className="w-full rounded-lg  px-2 py-4 font-semibold bg-blue-500 text-white"
               >
                 <div className="items-center flex gap-2 ">
@@ -420,8 +447,7 @@ const ChatDetails = ({ chatId }) => {
                 className="w-full rounded-lg items-center flex gap-2 px-2 py-4 font-semibold bg-red-500 text-white"
                 onClick={() => {
                   setOpenSetting(false);
-                  router(`/chats`);
-                  console.log("abc");
+                  router(`/`);
                   deleteGroupChat();
                 }}
               >
@@ -433,7 +459,7 @@ const ChatDetails = ({ chatId }) => {
                 className="w-full rounded-lg items-center flex gap-2 px-2 py-4 font-semibold bg-red-500 text-white"
                 onClick={() => {
                   setOpenSetting(false);
-                  router(`/chats`);
+                  router(`/`);
                   outGroupChat();
                 }}
               >
@@ -455,8 +481,10 @@ const ChatDetails = ({ chatId }) => {
         .length > 0 ? (
         <div className="send-message">
           <div className="prepare-message">
-            <CldUploadButton />
-
+            <label className="flex items-center bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg shadow-md p-3 cursor-pointer transition duration-200 ease-in-out">
+              <span>Gửi ảnh</span>
+              <input onChange={handleChange} type="file" className="hidden" />
+            </label>
             <input
               type="text"
               placeholder="Write a message..."
@@ -467,7 +495,6 @@ const ChatDetails = ({ chatId }) => {
               required
             />
           </div>
-
           <div
             onClick={() => {
               if (text.length > 0) {

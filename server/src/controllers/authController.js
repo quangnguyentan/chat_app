@@ -55,6 +55,7 @@ const register = async (req, res) => {
       charset: "numeric",
     });
     const { username, password, code, role } = req.body;
+    console.log(role);
     if (!username || !password)
       throw new Error("Bạn chưa điền tên đăng nhập hoặc mật khẩu", {
         status: 400,
@@ -90,32 +91,28 @@ const register = async (req, res) => {
 };
 const changePassword = async (req, res) => {
   try {
-    const { id } = req.params;
-    const { oldPassword, newPassword, rePassword } = req.body;
-    if (!password) throw new Error("Bạn chưa nhập mật khẩu cũ");
-    if (!newPassword) throw new Error("Bạn chưa nhập mật khẩu mới");
-    if (!rePassword) throw new Error("Bạn chưa nhập lại mật khẩu mới");
-    let user = await User.findById(id);
-    const isCorrectPassword =
-      user && bcrypt.compareSync(password, user.password);
-
-    if (isCorrectPassword) {
-      if (newPassword !== oldPassword)
-        throw new Error("Mật khẩu mới không trùng khớp");
-      await User.findByIdAndUpdate(
-        user?._id,
-        {
-          password: hashPassword(newPassword),
-        },
-        { new: true }
-      );
-    } else {
+    const { oldPassword, newPassword } = req.body;
+    const { userId } = req.params;
+    const getUser = await User.findById(userId);
+    console.log(getUser);
+    const isPassword =
+      getUser && bcrypt.compareSync(oldPassword, getUser?.password);
+    if (!isPassword) {
       throw new Error("Mật khẩu cũ không đúng");
     }
 
+    const hashedPassword = await hashPassword(newPassword);
+
+    const searchedChat = await User.findByIdAndUpdate(
+      userId,
+      {
+        password: hashedPassword,
+      },
+      { new: true }
+    );
     return res.status(200).json({
-      success: user ? true : false,
-      user: user,
+      success: searchedChat ? true : false,
+      searchedChat,
     });
   } catch (error) {
     res.status(500).json({

@@ -28,6 +28,42 @@ const getCurrent = async (req, res) => {
     });
   }
 };
+const updateUserByInfo = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    const { username, password, code } = req.body;
+
+    let getUser = await User.find();
+    getUser?.filter((user) => {
+      if (user?._id.toString() !== userId.toString()) {
+        if (user?.username === username)
+          throw new Error("Tên đăng nhập đã tồn tại");
+      }
+    });
+
+    const hashedPassword = await hashPassword(password);
+    const searchedChat = await User.findByIdAndUpdate(
+      userId,
+      {
+        fullName: username,
+        code: code,
+        username,
+        password: hashedPassword,
+      },
+      { new: true }
+    );
+
+    return res.status(200).json({
+      success: searchedChat ? true : false,
+      searchedChat,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: error.message,
+    });
+  }
+};
 const getAllUsers = async (req, res) => {
   try {
     const searchedChat = await User.find();
@@ -41,10 +77,26 @@ const getAllUsers = async (req, res) => {
     });
   }
 };
+const deleteUserById = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    console.log(userId);
+    const searchedChat = await User.findByIdAndDelete(userId);
+
+    return res.status(200).json({
+      success: searchedChat ? true : false,
+      searchedChat,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: error.message,
+    });
+  }
+};
 const getUserById = async (req, res) => {
   try {
     const { userId } = req.params;
-
+    console.log(userId);
     const searchedChat = await Chat.find({ members: userId })
       .sort({ lastMessageAt: -1 })
       .populate({
@@ -125,15 +177,20 @@ const searchChatId = async (req, res) => {
 const updateUserById = async (req, res) => {
   try {
     const { userId } = req.params;
+    const { fullName, profileImage } = req.body;
+    const findAllUser = await User.find();
 
-    const { username, profileImage } = req.body;
-
+    const userExists = findAllUser?.some(
+      (user) =>
+        userId?.toString() !== user?._id?.toString() &&
+        user?.fullName === fullName
+    );
+    if (userExists) {
+      throw new Error("Tên đã tồn tại");
+    }
     const updatedUser = await User.findByIdAndUpdate(
       userId,
-      {
-        username,
-        profileImage,
-      },
+      { fullName, profileImage },
       { new: true }
     );
 
@@ -154,6 +211,7 @@ const searchGroupById = async (req, res) => {
     // const query = params.query
 
     const { userId } = req.params;
+    console.log(userId);
     const { query } = req.params;
     const searchedChat = await Chat.find({
       members: userId,
@@ -191,4 +249,6 @@ module.exports = {
   updateUserById,
   getUserById,
   searchChatId,
+  updateUserByInfo,
+  deleteUserById,
 };

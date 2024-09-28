@@ -11,6 +11,8 @@ import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import Loader from "@/components/Loader";
 import CldUploadButton from "@/components/CldUploadButton";
+import { apiUpdatedUser } from "@/services/userService";
+import { apichangePassword } from "@/services/authService";
 const style = {
   position: "absolute",
   top: "50%",
@@ -26,6 +28,7 @@ const style = {
 const Profile = () => {
   const { currentUser: user } = useSelector((state) => state.user);
   const navigate = useNavigate();
+  const [images, setImages] = useState("");
   const dispatch = useDispatch();
   useEffect(() => {
     setLoading(true);
@@ -63,21 +66,19 @@ const Profile = () => {
 
   const updateUser = async (data) => {
     try {
-      const res = await fetch(`/api/users/${user._id}/update`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
+      const res = await apiUpdatedUser(user?._id, {
+        username: data?.username,
+        fullName: data?.fullName,
       });
       console.log(res);
-      if (res.ok) {
+      if (res.success) {
+        toast.success("Đổi thông tin thành công");
+
+        navigate("/");
         setLoading(false);
-        // window.location.reload();
       }
       if (!res.ok) {
-        const errorMessage = await res.text();
-        toast.error(errorMessage);
+        console.log("abc");
       }
     } catch (error) {
       console.log(error);
@@ -86,26 +87,18 @@ const Profile = () => {
   const onChange = async (data) => {
     console.log(data);
 
-    const res = await fetch(`/api/users/${user?._id}/change`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(data),
-    });
-
-    if (res.ok) {
+    const res = await apichangePassword(user?._id, data);
+    if (res?.success) {
       setOpen(false);
       reset();
       toast.success("Đổi mật khẩu thành công");
-
       // router.push("/");
     }
-
-    if (!res.ok) {
-      const errorMessage = await res.text();
-      toast.error(errorMessage);
-    }
+    setTimeout(() => {
+      if (!res.success) {
+        toast.error("Mật khẩu cũ không đúng");
+      }
+    }, 500);
   };
   return loading ? (
     <Loader />
@@ -187,15 +180,18 @@ const Profile = () => {
         <form className="edit-profile" onSubmit={handleSubmit(updateUser)}>
           <div className="flex items-center justify-between gap-8">
             <img
-              src={
-                watch("profileImage") ||
-                user?.profileImage ||
-                "/assets/person.jpg"
-              }
+              src={user?.profileImage || "/assets/person.jpg"}
               alt="profile"
               className="w-40 h-40 rounded-full "
             />
-            <CldUploadButton />
+            {/* <label className="flex items-center bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg shadow-md p-3 cursor-pointer transition duration-200 ease-in-out">
+              <span>Chọn ảnh</span>
+              <input
+                type="file"
+                onChange={(e) => setImages(e.target.files[0])}
+                className="hidden"
+              />
+            </label> */}
             {/* <CldUploadButton
               options={{ maxFiles: 1 }}
               onUpload={uploadPhoto}

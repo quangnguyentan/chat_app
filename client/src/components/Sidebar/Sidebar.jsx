@@ -12,7 +12,6 @@ export const Sidebar = () => {
         <Search />
         <RouteSelect />
       </div>
-
       <Plan />
     </div>
   );

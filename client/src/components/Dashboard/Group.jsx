@@ -20,6 +20,14 @@ import {
 } from "@mui/icons-material";
 import { useSelector } from "react-redux";
 import Loader from "../Loader";
+import { useNavigate } from "react-router-dom";
+import { apiGetAllUser, apiGetSearchContact } from "@/services/userService";
+import {
+  apiDeleteGroup,
+  apiGetChats,
+  apiUpdateChatById,
+} from "@/services/chatService";
+import { apiRegister } from "@/services/authService";
 const style = {
   position: "absolute",
   top: "50%",
@@ -57,16 +65,20 @@ export const Group = () => {
     setValue("groupPhoto", result?.info?.secure_url);
   };
 
-  const router = useRouter();
+  const router = useNavigate();
   const [loading, setLoading] = useState(false);
   const getContacts = async () => {
     try {
-      const res = await fetch(
-        search !== "" ? `/api/users/searchContact/${search}` : "/api/users"
-      );
-
-      const data = await res.json();
-      setContacts(data.filter((contact) => contact._id !== currentUser._id));
+      const res =
+        search !== ""
+          ? await apiGetSearchContact(search)
+          : await apiGetAllUser();
+      if (res?.success)
+        setContacts(
+          res?.searchedChat?.filter(
+            (contact) => contact._id !== currentUser._id
+          )
+        );
       setLoading(false);
     } catch (err) {
       console.log(err);
@@ -74,14 +86,9 @@ export const Group = () => {
   };
   const getChatDetails = async () => {
     try {
-      const res = await fetch(`/api/chats`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-      const data = await res.json();
-      setChats(data);
+      const res = await apiGetChats();
+      console.log(res);
+      setChats(res?.searchedChat);
       setLoading(false);
     } catch (error) {
       console.log(error);
@@ -94,18 +101,11 @@ export const Group = () => {
   console.log(chats);
   const onSubmit = async (data) => {
     setLoading(true);
-    const res = await fetch("/api/auth/register", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(data),
-    });
-
-    if (res.ok) {
+    const res = await apiRegister(data);
+    if (res.success) {
       setOpen(false);
       reset();
-      router.push("/dashboard");
+      router.push("/");
       toast.success("Tạo người dùng thành công");
       setLoading(false);
     }
@@ -131,52 +131,42 @@ export const Group = () => {
       setOpenPut(false);
       setEditEmployye(false);
       reset();
-      router.push("/dashboard");
+      router("/");
       toast.success("Chỉnh sửa người dùng thành công");
       setLoading(false);
-    }
-
-    if (!res.ok) {
-      const errorMessage = await res.text();
-      toast.error(errorMessage);
+    } else {
+      toast.success("Chỉnh sửa người dùng thất bại");
     }
   };
-  const onDelete = async (userId) => {
+  const onDelete = async () => {
     setLoading(true);
-    console.log(userId);
-    const res = await fetch(`/api/chats/${userId}/update`, {
-      method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-    if (res.ok) {
-      toast.success("Xóa người dùng thành công");
+    const res = await apiDeleteGroup(idEdit);
+    if (res.success) {
+      toast.success("Xóa nhóm thành công");
       setLoading(false);
-    }
-
-    if (!res.ok) {
-      const errorMessage = await res.text();
-      toast.error(errorMessage);
+    } else {
+      toast.error("Xóa nhóm thất bại");
     }
   };
   const updateGroupChat = async (data) => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/chats/${idEdit}/update`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
+      console.log(data?.name);
+
+      const res = await apiUpdateChatById(idEdit, {
+        name: data?.name,
+        groupPhoto: data?.groupPhoto,
       });
-      setLoading(false);
-      if (res.ok) {
-        reset();
+      console.log(res);
+      if (res.success) {
+        router(`/`);
+        setLoading(false);
+        setEditEmployye(false);
+        setSearch("");
         setOpenPut(false);
-        // router.push(`/chats/${chatId}`);
+        toast.success("Chỉnh sửa thành công");
       } else {
-        toast.error(res?.message);
+        toast.success("Chỉnh sửa thất bại");
       }
     } catch (error) {
       console.log(error);
@@ -352,9 +342,8 @@ export const Group = () => {
                           className="w-full rounded-lg items-center flex gap-2 px-2 py-4 font-semibold bg-red-500 text-white  cursor-pointer"
                           onClick={() => {
                             onDelete(idEdit);
-
                             setOpenPut(false);
-                            router.push(`/dashboard`);
+                            router.push(`/`);
                           }}
                         >
                           <DeleteForeverIcon />
@@ -382,10 +371,10 @@ export const Group = () => {
                           <div className="input">
                             <input
                               {...register("name", {
-                                required: "Group chat name is required",
+                                required: "Tên nhóm là bắt buộc",
                               })}
                               type="text"
-                              placeholder="Group chat name"
+                              placeholder="Tên nhóm"
                               className="input-field"
                             />
                             <GroupOutlined sx={{ color: "#737373" }} />
@@ -396,7 +385,7 @@ export const Group = () => {
                             </p>
                           )}
 
-                          <div className="flex items-center justify-between">
+                          {/* <div className="flex items-center justify-between">
                             <img
                               src={watch("groupPhoto") || "/assets/group.png"}
                               alt="profile"
@@ -413,7 +402,7 @@ export const Group = () => {
                                 <p className="text-body-bold">Tải ảnh lên</p>
                               </div>
                             </CldUploadButton>
-                          </div>
+                          </div> */}
 
                           <div className="flex flex-wrap gap-3">
                             {chats?.members?.map((member, index) => (

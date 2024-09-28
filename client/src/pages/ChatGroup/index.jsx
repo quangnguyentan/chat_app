@@ -7,7 +7,7 @@ import { Loader } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useSelector } from "react-redux";
 import CldUploadButton from "@/components/CldUploadButton";
-import { apiGetChatById } from "@/services/chatService";
+import { apiGetChatById, apiUpdateChatById } from "@/services/chatService";
 const GroupInfo = () => {
   const [loading, setLoading] = useState(true);
   const [chat, setChat] = useState({});
@@ -54,18 +54,16 @@ const GroupInfo = () => {
   const updateGroupChat = async (data) => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/chats/${chatId}/update`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
+      console.log(data?.name);
+
+      const res = await apiUpdateChatById(chatId, {
+        name: data?.name,
+        groupPhoto: data?.groupPhoto,
       });
-
-      setLoading(false);
-
-      if (res.ok) {
-        router(`/chats/${chatId}`);
+      console.log(res);
+      if (res.success) {
+        router(`/${chatId}`);
+        setLoading(false);
       } else {
         toast.error(res?.message);
       }
@@ -90,10 +88,10 @@ const GroupInfo = () => {
             <div className="input">
               <input
                 {...register("name", {
-                  required: "Group chat name is required",
+                  required: "Tên nhóm là bắt buộc",
                 })}
                 type="text"
-                placeholder="Group chat name"
+                placeholder="Tên nhóm"
                 className="input-field"
               />
               <GroupOutlined sx={{ color: "#737373" }} />
@@ -102,19 +100,13 @@ const GroupInfo = () => {
               <p className="text-red-500">{error.name.message}</p>
             )}
 
-            <div className="flex items-center justify-between">
+            {/* <div className="flex items-center justify-between">
               <img
                 src={watch("groupPhoto") || "/assets/group.png"}
                 alt="profile"
                 className="w-40 h-40 rounded-full"
               />
-              <CldUploadButton>
-                <div className="flex items-center gap-1">
-                  <FileUploadIcon />
-                  <p className="text-body-bold">Tải ảnh lên</p>
-                </div>
-              </CldUploadButton>
-            </div>
+            </div> */}
 
             <div className="flex flex-wrap gap-3">
               {chat?.members?.map((member, index) => (

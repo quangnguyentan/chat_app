@@ -3,22 +3,22 @@ import { useNavigate } from "react-router-dom";
 
 const ChatBox = ({ chat, currentUser, currentChatId = null, hidden }) => {
   const otherMembers = chat?.members?.filter(
-    (member) => member._id !== currentUser._id
+    (member) => member?._id !== currentUser?._id
   );
 
   const lastMessage =
     chat?.messages?.length > 0 && chat?.messages[chat?.messages.length - 1];
 
   const seen = lastMessage?.seenBy?.find(
-    (member) => member._id === currentUser._id
+    (member) => member?._id === currentUser?._id
   );
 
   const router = useNavigate();
 
   return (
     <div
-      className={`chat-box ${chat._id === currentChatId ? "bg-blue-2" : ""}`}
-      onClick={() => router(`/chats/${chat._id}`)}
+      className={`chat-box ${chat?._id === currentChatId ? "bg-blue-2" : ""}`}
+      onClick={() => router(`/${chat?._id}`)}
     >
       <div className="chat-info">
         {chat?.isGroup ? (
@@ -29,7 +29,7 @@ const ChatBox = ({ chat, currentUser, currentChatId = null, hidden }) => {
           />
         ) : (
           <img
-            src={otherMembers[0].profileImage || "/assets/person.jpg"}
+            src={otherMembers[0]?.profileImage || "/assets/person.jpg"}
             alt="profile-photo"
             className="profilePhoto"
           />

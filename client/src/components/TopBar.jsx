@@ -20,7 +20,7 @@ const TopBar = () => {
   }, []);
   return (
     <div className="topbar z-20">
-      <Link to="/chats">
+      <Link to="/">
         <img src="/assets/logo.png" alt="logo" className="logo" />
       </Link>
 

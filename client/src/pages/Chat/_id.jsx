@@ -13,9 +13,7 @@ const ChatPage = () => {
 
   const seenMessages = async () => {
     try {
-      await apiGetChatById({
-        currentUserId: currentUser._id,
-      });
+      await apiGetChatById(chatId);
     } catch (err) {
       console.log(err);
     }

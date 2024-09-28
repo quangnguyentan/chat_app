@@ -171,6 +171,23 @@ const getChatById = async (req, res) => {
     });
   }
 };
+
+const getChatAll = async (req, res) => {
+  try {
+    console.log("abc");
+
+    const searchedChat = await Chat.find();
+
+    return res.status(200).json({
+      success: searchedChat ? true : false,
+      searchedChat,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: error.message,
+    });
+  }
+};
 const updateChatById = async (req, res) => {
   try {
     console.log("abc");
@@ -203,37 +220,27 @@ const updateGroupChat = async (req, res) => {
   try {
     const { chatId } = req.params;
     const { name, groupPhoto } = req.body;
-    console.log("abc");
-
+    // if (!name || !groupPhoto) throw new Error("Loi");
+    console.log("chat", name);
     const updatedGroupChat = await Chat.findByIdAndUpdate(
       chatId,
       { name, groupPhoto },
       { new: true }
     );
-
     return res.status(200).json({
       success: updatedGroupChat ? true : false,
       updatedGroupChat,
     });
   } catch (err) {
-    res.status(500).json({
-      message: error.message,
-    });
+    console.log(err);
   }
 };
+
 const deleteGroupChat = async (req, res) => {
   try {
-    console.log("abc");
-
     const { chatId } = req.params;
 
-    const { name, groupPhoto } = req.body;
-
-    const updatedGroupChat = await Chat.findByIdAndUpdate(
-      chatId,
-      { name, groupPhoto },
-      { new: true }
-    );
+    const updatedGroupChat = await Chat.findByIdAndDelete(chatId);
 
     return res.status(200).json({
       success: updatedGroupChat ? true : false,
@@ -252,4 +259,5 @@ module.exports = {
   createChat,
   updateRoomGroup,
   deleteGroupChat,
+  getChatAll,
 };

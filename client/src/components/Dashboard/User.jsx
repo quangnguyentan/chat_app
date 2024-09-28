@@ -19,6 +19,13 @@ import {
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import Loader from "../Loader";
+import {
+  apiDeleteUser,
+  apiGetAllUser,
+  apiGetSearchContact,
+  apiUpdatedUserByInfo,
+} from "@/services/userService";
+import { apiRegister } from "@/services/authService";
 const style = {
   position: "absolute",
   top: "50%",
@@ -54,12 +61,16 @@ export const User = () => {
   const [loading, setLoading] = useState(false);
   const getContacts = async () => {
     try {
-      const res = await fetch(
-        search !== "" ? `/api/users/searchContact/${search}` : "/api/users"
-      );
-
-      const data = await res.json();
-      setContacts(data.filter((contact) => contact._id !== currentUser._id));
+      const res =
+        search !== ""
+          ? await apiGetSearchContact(search)
+          : await apiGetAllUser();
+      if (res?.success)
+        setContacts(
+          res?.searchedChat?.filter(
+            (contact) => contact._id !== currentUser._id
+          )
+        );
       setLoading(false);
     } catch (err) {
       console.log(err);
@@ -68,73 +79,51 @@ export const User = () => {
 
   const onSubmit = async (data) => {
     setLoading(true);
-    const res = await fetch("/api/auth/register", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(data),
-    });
-
-    if (res.ok) {
+    console.log({ ...data, role: true });
+    const res = await apiRegister(data);
+    if (res.success) {
       setOpen(false);
       reset();
-      router.push("/dashboard");
+      router("/");
       toast.success("Tạo người dùng thành công");
       setLoading(false);
-    }
-
-    if (!res.ok) {
-      const errorMessage = await res.text();
-      toast.error(errorMessage);
     }
   };
   const onEdit = async (userId, data) => {
     setLoading(true);
     console.log(userId);
     console.log(data);
-    const res = await fetch(`/api/users/${userId}/`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(data),
-    });
+    const res = await apiUpdatedUserByInfo(userId, data);
     console.log(res);
-    if (res.ok) {
+    if (res.success) {
       setOpenPut(false);
       setEditEmployye(false);
       reset();
-      router.push("/dashboard");
-      toast.success("Chỉnh sửa người dùng thành công");
+      router("/");
+      toast.success("Chỉnh sửa nhân viên thành công");
       setLoading(false);
     }
 
-    if (!res.ok) {
-      const errorMessage = await res.text();
-      toast.error(errorMessage);
+    if (!res.success) {
+      toast.error("Chỉnh sửa nhân viên thất bại");
     }
   };
   const onDelete = async (userId) => {
-    setLoading(true);
     console.log(userId);
-    const res = await fetch(`/api/users/${userId}/`, {
-      method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-    if (res.ok) {
-      router.push("/dashboard");
-      toast.success("Xóa người dùng thành công");
+    setLoading(true);
+    const res = await apiDeleteUser(userId);
+    console.log(res);
+    if (res?.success) {
+      router("/");
+      toast.success("Xóa nhân viên thành công");
       setLoading(false);
     }
 
-    if (!res.ok) {
-      const errorMessage = await res.text();
-      toast.error(errorMessage);
+    if (!res?.success) {
+      toast.error("Xóa nhân viên không thành công");
     }
   };
+
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
       if (currentUser) getContacts();
@@ -303,7 +292,7 @@ export const User = () => {
                             onDelete(idEdit);
 
                             setOpenPut(false);
-                            router.push(`/dashboard`);
+                            router.push(`/`);
                           }}
                         >
                           <DeleteForeverIcon />
