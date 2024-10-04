@@ -48,6 +48,14 @@ const Contacts = () => {
   const handleClose = () => setOpen(false);
   const { currentUser } = useSelector((state) => state.user);
 
+  const dispatch = useDispatch();
+  useEffect(() => {
+    setLoading(true);
+    setTimeout(() => {
+      dispatch(getCurrent());
+      setLoading(false);
+    }, 1000);
+  }, []);
   const getContacts = async () => {
     try {
       const res =
@@ -138,6 +146,7 @@ const Contacts = () => {
         isGroup: false,
         name,
       });
+      console.log(res);
       if (res?.success) {
         router(`/${res?.chat?._id}`);
         setLoading(false);

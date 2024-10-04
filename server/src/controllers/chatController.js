@@ -46,40 +46,79 @@ const createChat = async (req, res) => {
       }
     }
     if (!chat && currentUserId) {
-      // findUser?.chats?.map(async (chat) => {
-      //   // console.log(chat);
-      //   const findChat = await Chat.findById(chat?._id);
-      //   // console.log(findChat);
-      //   // console.log(chat);
-      //   // console.log(findChat?._id);
-      //   if (chat?.toString() === findChat._id?.toString()) {
-      //     console.log(chat);
-      //   }
-      //   // if (members?.includes(findChat?._id.toString())) {
-      //   //   console.log(chat);
-      //   // }
+      const findUser = await User?.findById(members[0]);
+      const findHasUser = await User?.findById(currentUserId);
+      // const filter = await Chat.find();
+      // filter?.filter?.((chat) => findUser?.chats?.includes(chat?._id));
+      const userRes = [findUser, findHasUser];
+      const userIds = userRes.map((user) => user?._id.toString());
+      const filterChat = findHasUser?.chats
+        ? await Promise.all(
+            findHasUser.chats.map(async (chatId) => {
+              const findChat = await Chat.findById(chatId.toString());
+              if (findChat) {
+                const filteredMembers = findChat.members?.filter((member) => {
+                  return userIds.includes(member.toString());
+                });
+                return { chat: findChat, members: filteredMembers }; // Return chat and filtered members
+              }
+              return null; // Return null if no chat found
+            })
+          )
+        : [];
+
+      console.log("filterChat", filterChat[0]?.chat?.members);
+      // console.log(findHasUser);
+      // const filterUser = filter?.find((chat) => {
+      //   console.log(chat);
+      //   return chat?.members?.map((member) => {
+      //     return member?.toString() === findHasUser?._id.toString();
+      //   });
       // });
-
-      chat = await new Chat(
-        isGroup ? query : { members: [currentUserId, ...members] }
-      );
-      chat?.save();
-
-      const updateAllMembers = chat?.members?.map(async (memberId) => {
-        await User.findByIdAndUpdate(
-          memberId,
-          {
-            $addToSet: { chats: chat._id },
-          },
-          { new: true }
-        );
-      });
-      Promise.all(updateAllMembers);
-      chat.members.map(async (member) => {
-        await pusherServer.trigger(member._id.toString(), "new-chat", chat);
-      });
+      // findHasUser?.chats?.filter((rs) => filterUser?.chats?.includes(rs?._id));
+      // findHasUser?.chats?.filter((user) => {
+      //   console.log("check", user?.toString());
+      //   return user?.toString() === findUser?._id.toString();
+      // });
+      // const filter = await Chat.find();
+      // filter?.map((chat) => chat?.members?.filter((member) => member?.toString() === ))
+      // const findUser = await User?.findById(currentUserId);
+      // if (findUser) {
+      //   const filter = await Chat.find();
+      //   const findUsers = filter?.map((el) => {
+      //     return el?.members?.filter((el) => {
+      //       return el.toString() !== currentUserId;
+      //     });
+      //   });
+      //   const findChat = findUser?.chats?.filter((chat) => {
+      //     console.log("chat", findUsers);
+      //     return chat?.toString() === findUsers?._id;
+      //   });
+      //   console.log(findChat);
+      //   if (findChat?._id) {
+      //     chat = findChat;
+      //   }
+      //   // else {
+      //   //   chat = await new Chat(
+      //   //     isGroup ? query : { members: [currentUserId, ...members] }
+      //   //   );
+      //   //   chat?.save();
+      //   //   const updateAllMembers = chat?.members?.map(async (memberId) => {
+      //   //     await User.findByIdAndUpdate(
+      //   //       memberId,
+      //   //       {
+      //   //         $addToSet: { chats: chat._id },
+      //   //       },
+      //   //       { new: true }
+      //   //     );
+      //   //   });
+      //   //   Promise.all(updateAllMembers);
+      //   //   chat.members.map(async (member) => {
+      //   //     await pusherServer.trigger(member._id.toString(), "new-chat", chat);
+      //   //   });
+      //   // }
+      // }
     }
-
     return res.status(200).json({
       success: chat ? true : false,
       chat,
@@ -221,10 +260,14 @@ const updateGroupChat = async (req, res) => {
     const { chatId } = req.params;
     const { name, groupPhoto } = req.body;
     // if (!name || !groupPhoto) throw new Error("Loi");
-    console.log("chat", name);
     const updatedGroupChat = await Chat.findByIdAndUpdate(
       chatId,
-      { name, groupPhoto },
+      {
+        name,
+        groupPhoto:
+          req?.file?.filename &&
+          `http://localhost:8080/images/${req?.file?.filename}`,
+      },
       { new: true }
     );
     return res.status(200).json({

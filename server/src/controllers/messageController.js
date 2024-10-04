@@ -5,14 +5,14 @@ const { pusherServer } = require("../utils/lib/pusher");
 const createAndUpdateMessage = async (req, res) => {
   try {
     const { chatId, currentUserId, text, photo } = req.body;
-
+    console.log(req.body);
     const currentUser = await User.findById(currentUserId);
 
     const newMessage = await Message.create({
       chat: chatId,
       sender: currentUser,
       text,
-      photo,
+      photo: text ? "" : `http://localhost:8080/images/${req.file.filename}`,
       seenBy: currentUserId,
     });
 
@@ -35,10 +35,8 @@ const createAndUpdateMessage = async (req, res) => {
       })
       .exec();
 
-    /* Trigger a Pusher event for a specific chat about the new message */
     await pusherServer.trigger(chatId, "new-message", newMessage);
 
-    /* Triggers a Pusher event for each member of the chat about the chat update with the latest message */
     const lastMessage = updatedChat.messages[updatedChat.messages.length - 1];
     updatedChat.members.forEach(async (member) => {
       try {

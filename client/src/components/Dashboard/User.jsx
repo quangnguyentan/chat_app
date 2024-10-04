@@ -16,7 +16,7 @@ import {
   LockOutlined,
   PersonOutline,
 } from "@mui/icons-material";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import Loader from "../Loader";
 import {
@@ -26,6 +26,7 @@ import {
   apiUpdatedUserByInfo,
 } from "@/services/userService";
 import { apiRegister } from "@/services/authService";
+import { getCurrent } from "@/stores/actions/userAction";
 const style = {
   position: "absolute",
   top: "50%",
@@ -59,6 +60,14 @@ export const User = () => {
 
   const router = useNavigate();
   const [loading, setLoading] = useState(false);
+  const dispatch = useDispatch();
+  useEffect(() => {
+    setLoading(true);
+    setTimeout(() => {
+      dispatch(getCurrent());
+      setLoading(false);
+    }, 1000);
+  }, []);
   const getContacts = async () => {
     try {
       const res =

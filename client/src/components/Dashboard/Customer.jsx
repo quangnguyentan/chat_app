@@ -24,8 +24,9 @@ import {
   apiGetSearchContact,
   apiUpdatedUserByInfo,
 } from "@/services/userService";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { apiRegister } from "@/services/authService";
+import { getCurrent } from "@/stores/actions/userAction";
 const style = {
   position: "absolute",
   top: "50%",
@@ -46,7 +47,11 @@ export const Customer = () => {
   let handleClose = () => setOpen(false);
   const [open, setOpen] = useState(false);
   const [openPut, setOpenPut] = useState(false);
-  let handleClosePut = () => setOpenPut(false);
+  let handleClosePut = () => {
+    setOpenPut(false);
+    setEditEmployye(false);
+    setValue("");
+  };
   const { currentUser } = useSelector((state) => state.user);
   const [value, setValue] = useState("");
   const {
@@ -59,7 +64,14 @@ export const Customer = () => {
 
   const router = useNavigate();
   const [loading, setLoading] = useState(false);
-
+  const dispatch = useDispatch();
+  useEffect(() => {
+    setLoading(true);
+    setTimeout(() => {
+      dispatch(getCurrent());
+      setLoading(false);
+    }, 1000);
+  }, []);
   const getContacts = async () => {
     try {
       const res =
@@ -93,7 +105,6 @@ export const Customer = () => {
     console.log(userId);
     console.log(data);
     const res = await apiUpdatedUserByInfo(userId, data);
-    console.log(res);
     if (res.success) {
       setOpenPut(false);
       setEditEmployye(false);
@@ -129,11 +140,10 @@ export const Customer = () => {
       if (currentUser) getContacts();
     }, 500);
     return () => clearTimeout(delayDebounceFn);
-  }, [currentUser, search, loading]);
+  }, [currentUser, loading]);
   const handleClick = (id, contact) => {
     setIdEdit(id);
     setValue(contact);
-
     setOpenPut(true);
   };
   return loading ? (

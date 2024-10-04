@@ -18,29 +18,32 @@ const Form = ({ type }) => {
   const dispatch = useDispatch();
   const router = useNavigate();
   const onSubmit = async (data) => {
-    if (type === "register") {
-      const res = await apiRegister(data);
-      if (res?.success) {
-        router("/sign-in");
-        toast.success("Đăng kí thành công");
+    try {
+      if (type === "register") {
+        const res = await apiRegister(data);
+        if (res?.success) {
+          router("/sign-in");
+          toast.success("Đăng kí thành công");
+        }
+        if (!res?.success) {
+          toast?.error(res.message);
+        }
       }
-      if (!res?.success) {
-        toast?.error(res.message);
-      }
-    }
 
-    if (type === "login") {
-      const rs = await apiLoginSuccess(data);
-      if (rs?.success === 0) {
-        dispatch(loginSuccessAction(data));
-        setTimeout(() => {
-          router("/");
-        }, 1000);
-      } else {
-        setTimeout(() => {
+      if (type === "login") {
+        const rs = await apiLoginSuccess(data);
+        if (rs?.success === 0) {
+          dispatch(loginSuccessAction(data));
+          setTimeout(() => {
+            router("/");
+          }, 1000);
+        } else {
           toast.error("Sai tên đăng nhập hoặc mật khẩu");
-        }, 1000);
+        }
       }
+    } catch (error) {
+      console.error(error);
+      toast.error("Đã xảy ra lỗi, vui lòng thử lại sau");
     }
   };
 

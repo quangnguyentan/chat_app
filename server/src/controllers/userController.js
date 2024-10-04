@@ -179,7 +179,8 @@ const updateUserById = async (req, res) => {
     const { userId } = req.params;
     const { fullName, profileImage } = req.body;
     const findAllUser = await User.find();
-
+    console.log(req.body);
+    console.log(req?.file?.filename);
     const userExists = findAllUser?.some(
       (user) =>
         userId?.toString() !== user?._id?.toString() &&
@@ -190,7 +191,12 @@ const updateUserById = async (req, res) => {
     }
     const updatedUser = await User.findByIdAndUpdate(
       userId,
-      { fullName, profileImage },
+      {
+        fullName,
+        profileImage:
+          req?.file?.filename &&
+          `http://localhost:8080/images/${req?.file?.filename}`,
+      },
       { new: true }
     );
 

@@ -165,22 +165,39 @@ const ChatDetails = ({ chatId }) => {
     if (currentUser && chatId) getChatDetails(chatId);
   }, [currentUser, chatId]);
   const handleChange = async (e) => {
-    console.log(e.target?.files[0]);
-    const file = e.target.files[0];
-    setImages(file);
-    await sendPhoto();
+    setImages(e.target.files[0]);
     // Call sendPhoto right after file selection
   };
-  const sendText = async () => {
+  const sendText = async (type, e) => {
+    console.log(type);
     try {
-      const res = await apiSendMessages({
-        chatId,
-        currentUserId: currentUser._id,
-        text,
-      });
+      if (type === "photo") {
+        e.preventDefault();
+        const formData = new FormData();
+        formData.append("images", images);
+        formData.append("chatId", chatId);
+        formData.append("currentUserId", currentUser._id);
+        const rs = await apiSendMessages(formData);
+        // const rs = await apiSendMessages({
+        //   chatId,
+        //   currentUserId: currentUser._id,
+        //   photo: formData,
+        // });
+        console.log(rs);
+        if (rs?.success) {
+          setImages("");
+        }
+      }
+      if (type === "text") {
+        const res = await apiSendMessages({
+          chatId,
+          currentUserId: currentUser._id,
+          text,
+        });
 
-      if (res?.success) {
-        setText("");
+        if (res?.success) {
+          setText("");
+        }
       }
     } catch (err) {
       console.log(err);
@@ -188,40 +205,28 @@ const ChatDetails = ({ chatId }) => {
   };
   const handleKeyDown = (event) => {
     if (event.key === "Enter" && text.length > 0) {
-      sendText();
+      sendText("text", event);
+      setText("");
+    }
+    if (event.key === "Enter" && images?.name?.length > 0) {
+      sendText("photo", event);
+      setImages("");
     }
   };
-  const sendPhoto = async () => {
-    if (!images) return;
+
+  const sendPhoto = async (e) => {
     try {
-      const data = new FormData();
-      data.append("file", images);
-      data.append("upload_preset", "i96i6rvi");
-      data.append("cloud_name", "dlwx7hywr");
-      console.log(images);
-      const response = await fetch(
-        "https://api.cloudinary.com/v1_1/dlwx7hywr/image/upload",
-        {
-          method: "POST",
-          body: data,
-        }
-      );
-
-      // Kiểm tra nếu phản hồi không thành công
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const result = await response.json();
-
-      // Gọi hàm apiSendMessages với dữ liệu nhận được
-      await apiSendMessages({
-        chatId,
-        currentUserId: currentUser._id,
-        photo: result?.url,
-      });
-
-      console.log(result);
+      // e.preventDefault();
+      // console.log(images);
+      // const formData = new FormData();
+      // formData.append("image", images);
+      // console.log("formData", formData);
+      // const rs = await apiSendMessages({
+      //   chatId,
+      //   currentUserId: currentUser._id,
+      //   photo: formData,
+      // });
+      // console.log(rs);
     } catch (err) {
       console.error("Error uploading photo:", err);
     }
@@ -248,7 +253,7 @@ const ChatDetails = ({ chatId }) => {
   }, [chatId]);
 
   const bottomRef = useRef(null);
-
+  console.log(chat?.messages);
   useEffect(() => {
     bottomRef.current?.scrollIntoView({
       behavior: "smooth",
@@ -482,23 +487,25 @@ const ChatDetails = ({ chatId }) => {
         <div className="send-message">
           <div className="prepare-message">
             <label className="flex items-center bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg shadow-md p-3 cursor-pointer transition duration-200 ease-in-out">
-              <span>Gửi ảnh</span>
+              <span>Chọn ảnh</span>
               <input onChange={handleChange} type="file" className="hidden" />
             </label>
             <input
               type="text"
               placeholder="Write a message..."
               className="input-field"
-              value={text}
+              value={text ? text : images?.name ? images?.name : ""}
               onChange={(e) => setText(e.target.value)}
               onKeyDown={handleKeyDown}
               required
             />
           </div>
           <div
-            onClick={() => {
+            onClick={(e) => {
               if (text.length > 0) {
-                sendText();
+                sendText("text", e);
+              } else {
+                sendText("photo", e);
               }
             }}
           >

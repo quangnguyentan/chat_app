@@ -3,7 +3,9 @@ import { Dashboard } from "@/components/Dashboard/Dashboard";
 import { Group } from "@/components/Dashboard/Group";
 import { User } from "@/components/Dashboard/User";
 import { Sidebar } from "@/components/Sidebar/Sidebar";
+import { getCurrent } from "@/stores/actions/userAction";
 import { useEffect, useState } from "react";
+import { useDispatch } from "react-redux";
 
 export default function Home() {
   const [getIndex, setGetIndex] = useState("");

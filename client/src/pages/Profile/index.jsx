@@ -1,6 +1,6 @@
 import { LockOutlined, PersonOutline } from "@mui/icons-material";
 import React, { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
+import { get, useForm } from "react-hook-form";
 import FileUploadIcon from "@mui/icons-material/FileUpload";
 import toast from "react-hot-toast";
 import Box from "@mui/material/Box";
@@ -29,7 +29,7 @@ const Profile = () => {
   const { currentUser: user } = useSelector((state) => state.user);
   const navigate = useNavigate();
   const [images, setImages] = useState("");
-  
+
   const dispatch = useDispatch();
   useEffect(() => {
     setLoading(true);
@@ -47,7 +47,6 @@ const Profile = () => {
     if (user) {
       reset({
         username: user?.username,
-        profileImage: user?.profileImage,
       });
     }
     setLoading(false);
@@ -58,23 +57,20 @@ const Profile = () => {
     setValue,
     reset,
     handleSubmit,
+    getValues,
     formState: { errors },
   } = useForm();
 
-  const uploadPhoto = (result) => {
-    setValue("profileImage", result?.info?.secure_url);
-  };
-
   const updateUser = async (data) => {
     try {
-      const res = await apiUpdatedUser(user?._id, {
-        username: data?.username,
-        fullName: data?.fullName,
-      });
+      const formData = new FormData();
+      formData.append("images", images);
+      formData.append("username", data?.username);
+      formData.append("fullName", data?.fullName);
+      const res = await apiUpdatedUser(user?._id, formData);
       console.log(res);
       if (res.success) {
         toast.success("Đổi thông tin thành công");
-
         navigate("/");
         setLoading(false);
       }
@@ -85,9 +81,10 @@ const Profile = () => {
       console.log(error);
     }
   };
+  const handleChange = async (e) => {
+    setImages(e.target.files[0]);
+  };
   const onChange = async (data) => {
-    console.log(data);
-
     const res = await apichangePassword(user?._id, data);
     if (res?.success) {
       setOpen(false);
@@ -116,7 +113,7 @@ const Profile = () => {
           <Box sx={style}>
             {open && (
               <form className="form" onSubmit={handleSubmit(onChange)}>
-                <h3 className="font-semibold text-heading3-bold">
+                <h3 className="font-semibold text-heading3-bold ">
                   Đổi mật khẩu
                 </h3>
                 <div>
@@ -185,14 +182,20 @@ const Profile = () => {
               alt="profile"
               className="w-40 h-40 rounded-full "
             />
-            {/* <label className="flex items-center bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg shadow-md p-3 cursor-pointer transition duration-200 ease-in-out">
-              <span>Chọn ảnh</span>
+            <label className="flex items-center bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg shadow-md p-3 cursor-pointer transition duration-200 ease-in-out">
+              <span>
+                {images?.name?.length > 0
+                  ? `Đã chọn ảnh ${images?.name}`
+                  : "Chọn ảnh"}
+              </span>
+
               <input
                 type="file"
-                onChange={(e) => setImages(e.target.files[0])}
+                onChange={handleChange}
                 className="hidden"
+                accept="image/*"
               />
-            </label> */}
+            </label>
             {/* <CldUploadButton
               options={{ maxFiles: 1 }}
               onUpload={uploadPhoto}
@@ -236,7 +239,7 @@ const Profile = () => {
             {user?.role === "user" || user?.role === "admin" ? (
               <div className="flex items-center justify-end w-full">
                 <h3
-                  className="font-semibold cursor-pointer"
+                  className="font-semibold cursor-pointer btn "
                   onClick={() => setOpen(true)}
                 >
                   Đổi mật khẩu
@@ -244,7 +247,7 @@ const Profile = () => {
               </div>
             ) : (
               <h3
-                className="font-semibold cursor-pointer"
+                className="font-semibold cursor-pointer btn "
                 onClick={() => setOpen(true)}
               >
                 Đổi mật khẩu

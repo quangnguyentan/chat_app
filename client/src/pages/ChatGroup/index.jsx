@@ -12,6 +12,7 @@ const GroupInfo = () => {
   const [loading, setLoading] = useState(true);
   const [chat, setChat] = useState({});
   const { currentUser } = useSelector((state) => state.user);
+  const [images, setImages] = useState("");
 
   const { chatId } = useParams();
 
@@ -29,7 +30,10 @@ const GroupInfo = () => {
       console.log(error);
     }
   };
-
+  const handleChange = async (e) => {
+    setImages(e.target.files[0]);
+    // Call sendPhoto right after file selection
+  };
   useEffect(() => {
     if (chatId) {
       getChatDetails();
@@ -54,15 +58,16 @@ const GroupInfo = () => {
   const updateGroupChat = async (data) => {
     setLoading(true);
     try {
-      console.log(data?.name);
-
-      const res = await apiUpdateChatById(chatId, {
-        name: data?.name,
-        groupPhoto: data?.groupPhoto,
-      });
+      const formData = new FormData();
+      formData.append("images", images);
+      formData.append("name", data?.name);
+      const res = await apiUpdateChatById(chatId, formData);
       console.log(res);
       if (res.success) {
+        setImages("");
+        reset();
         router(`/${chatId}`);
+        toast.success("Sửa nhóm thành công");
         setLoading(false);
       } else {
         toast.error(res?.message);
@@ -100,13 +105,27 @@ const GroupInfo = () => {
               <p className="text-red-500">{error.name.message}</p>
             )}
 
-            {/* <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between">
               <img
                 src={watch("groupPhoto") || "/assets/group.png"}
                 alt="profile"
                 className="w-40 h-40 rounded-full"
               />
-            </div> */}
+              <label className="flex items-center bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg shadow-md p-3 cursor-pointer transition duration-200 ease-in-out">
+                <span>
+                  {images?.name?.length > 0
+                    ? `Đã chọn ảnh ${images?.name}`
+                    : "Chọn ảnh"}
+                </span>
+
+                <input
+                  type="file"
+                  onChange={handleChange}
+                  className="hidden"
+                  accept="image/*"
+                />
+              </label>
+            </div>
 
             <div className="flex flex-wrap gap-3">
               {chat?.members?.map((member, index) => (
