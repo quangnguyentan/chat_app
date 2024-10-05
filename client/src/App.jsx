@@ -17,6 +17,7 @@ import ChatPage from "./pages/Chat/_id";
 import Profile from "./pages/Profile";
 import GroupInfo from "./pages/ChatGroup";
 import Home from "./pages/Dashboard";
+import { logout } from "./stores/actions/authAction";
 
 function App() {
   const [loading, setLoading] = useState(false);
@@ -24,8 +25,21 @@ function App() {
   const { isLoggedIn, token } = useSelector((state) => state.auth);
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  function isTokenExpired(token) {
+    if (!token) return true; // Nếu không có token, coi như đã hết hạn
+
+    const decoded = JSON.parse(atob(token.split(".")[1])); // Giải mã phần payload của token
+    const now = Date.now() / 1000; // Thời gian hiện tại tính bằng giây
+    console.log(now);
+    return decoded.exp < now; // Kiểm tra xem token đã hết hạn chưa
+  }
   useEffect(() => {
-    if (isLoggedIn && token) {
+    if (token && isTokenExpired(token)) {
+      // Token đã hết hạn
+      dispatch(logout()); // Giả định bạn có một action để đăng xuất
+      navigate("/sign-in");
+    } else if (isLoggedIn && token) {
+      // Token còn hạn
       setLoading(true);
       setTimeout(() => {
         dispatch(getCurrent());
@@ -35,6 +49,17 @@ function App() {
       navigate("/sign-in");
     }
   }, [isLoggedIn, token]);
+  // useEffect(() => {
+  //   if (isLoggedIn && token) {
+  //     setLoading(true);
+  //     setTimeout(() => {
+  //       dispatch(getCurrent());
+  //       setLoading(false);
+  //     }, 1000);
+  //   } else {
+  //     navigate("/sign-in");
+  //   }
+  // }, [isLoggedIn, token]);
 
   return (
     <div>

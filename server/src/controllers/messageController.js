@@ -12,7 +12,9 @@ const createAndUpdateMessage = async (req, res) => {
       chat: chatId,
       sender: currentUser,
       text,
-      photo: text ? "" : `http://localhost:8080/images/${req.file.filename}`,
+      photo: text
+        ? ""
+        : `https://sv.korea-chat.com/images/${req.file.filename}`,
       seenBy: currentUserId,
     });
 

@@ -5,6 +5,8 @@ const {
   changePassword,
 } = require("../controllers/authController");
 const { verifyToken, isAdmin } = require("../middlewares/verifyToken");
+const { checkExpiredToken } = require("../middlewares/jwt");
+
 const router = require("express").Router();
 router.get("/", [verifyToken], getAllUsers);
 router.post("/login", login);

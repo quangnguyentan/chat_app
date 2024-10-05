@@ -32,8 +32,8 @@ const login = async (req, res) => {
       isCorrectPassword &&
       jwt.sign(
         { id: response?._id, role: response?.role },
-        process.env.SECRET_KEY,
-        { expiresIn: "2d" }
+        process.env.SECRET_KEY
+        // { expiresIn: "2d" }
       );
 
     return res.status(200).json({

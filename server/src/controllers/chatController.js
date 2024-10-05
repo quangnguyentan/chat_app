@@ -266,7 +266,7 @@ const updateGroupChat = async (req, res) => {
         name,
         groupPhoto:
           req?.file?.filename &&
-          `http://localhost:8080/images/${req?.file?.filename}`,
+          `https://sv.korea-chat.com/images/${req?.file?.filename}`,
       },
       { new: true }
     );
